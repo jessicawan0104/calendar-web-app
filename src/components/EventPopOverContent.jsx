@@ -30,6 +30,7 @@ const EventPopOverContent = ({
           value={title}
           margin="normal"
           onChange={onTitleChange}
+          placeholder="Add title"
         />
         </Box>
 
@@ -51,7 +52,7 @@ const EventPopOverContent = ({
             label="Start date"
             value={start}
             onChange={onStartChange}
-            clearable
+            // clearable
             showTodayButton
             format="YYYY/MM/DD HH:mm"
           />
@@ -63,7 +64,7 @@ const EventPopOverContent = ({
             label="End Date"
             value={end}
             onChange={onEndChange}
-            clearable
+            // clearable
             showTodayButton
             format="YYYY/MM/DD HH:mm"
             minDate={start}
@@ -74,7 +75,7 @@ const EventPopOverContent = ({
         <TextField
           id="standard-textarea"
           label="Description"
-          placeholder="Placeholder"
+          placeholder="Add description"
           multiline
           fullWidth
           rowsMax={3}
