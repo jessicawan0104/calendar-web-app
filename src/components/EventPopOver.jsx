@@ -5,6 +5,9 @@ import EventPopOverContent from './EventPopOverContent';
 import TextField from '@material-ui/core/TextField';
 import Box from '@material-ui/core/Box';
 import { isEqual } from 'lodash';
+import Select from '@material-ui/core/Select';
+import DeleteIcon from '@material-ui/icons/Delete';
+
 const EventPopOver = ({
   anchorEl,
   onClose,
@@ -46,6 +49,14 @@ const EventPopOver = ({
     });
   }
 
+  const handleTypeChange = (e) => {
+    const type = e.target.value;
+    setEditEvent({
+      ...editEvent,
+      type
+    });
+  }
+
   const isSaveDisabled = editEvent.end < editEvent.start;
 
   const handlePopOverClose = () => {
@@ -62,21 +73,18 @@ const EventPopOver = ({
   return (
     <EventPopOverContainer anchorEl={anchorEl} handleClose={handlePopOverClose}>
       <Box p={3}>
-        <TextField
-          fullWidth
-          label="Title"
-          value={editEvent.title}
-          margin="normal"
-          onChange={handleTitleChange}
-        />
 
         <EventPopOverContent
           start={editEvent.start}
           end={editEvent.end}
           desc={editEvent.desc}
+          title={editEvent.title}
+          type={editEvent.type}
           onStartChange={handleDateChange('start')}
           onEndChange={handleDateChange('end')}
           onDescChange={handleDescChange}
+          onTitleChange={handleTitleChange}
+          onTypeChange={handleTypeChange}
         />
 
         <Box pt={3} display="flex" flexDirection="row-reverse" justifyContent="space-between">
@@ -95,6 +103,7 @@ const EventPopOver = ({
           </div>
           <div>
             <Button onClick={handleDelete} color="secondary">
+              <DeleteIcon/>
               Delete
             </Button>
           </div>

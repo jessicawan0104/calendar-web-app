@@ -1,6 +1,4 @@
 import React from 'react';
-import Calendar from "react-big-calendar";
-import moment from 'moment'
 import styled from 'styled-components';
 import events from './events';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -8,12 +6,21 @@ import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import MomentUtils from '@date-io/moment';
 import EventPopOver from '../components/EventPopOver';
 import Event from '../components/Event';
+import TimeZonedCalendar from '../components/TimezonedCalendar'
+
+import { Container } from '../App';
+import Side from './Side';
 
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 import 'react-big-calendar/lib/sass/styles.scss'
+import { Box } from '@material-ui/core';
 
-const localizer = Calendar.momentLocalizer(moment);
-const DndCalendar = withDragAndDrop(Calendar)
+
+
+
+const DndCalendar = withDragAndDrop(TimeZonedCalendar)
+
+
 
 class MyCalendar extends React.Component {
   constructor(props) {
@@ -23,6 +30,7 @@ class MyCalendar extends React.Component {
       selectedEvent: {},
       selectedEventEl: null,
       newEventId: null,
+      checkedTypes: ['NONE', 'TODO', 'EVENT', 'REMINDER']
     };
   }
 
@@ -81,7 +89,8 @@ class MyCalendar extends React.Component {
 
 
   newEvent = (event) => {
-    console.log(event.start)
+    console.log('event.start', event.start)
+    console.log('event.end', event.end)
     let idList = this.state.events.map(a => a.id)
     let newId = Math.max(...idList) + 1
     let newEvent = {
@@ -90,6 +99,7 @@ class MyCalendar extends React.Component {
       allDay: event.slots.length === 1,
       start: event.start,
       end: event.end,
+      type: 'NONE'
     }
     this.setState({
       newEventId: newId,
@@ -115,7 +125,7 @@ class MyCalendar extends React.Component {
       selectedEventEl: null
     }, () => {
       let newEvents;
-      if(this.state.newEventId !== null) {
+      if (this.state.newEventId !== null) {
         newEvents = this.state.events.filter(evt => evt.id !== this.state.newEventId);
       } else {
         newEvents = this.state.events;
@@ -134,40 +144,60 @@ class MyCalendar extends React.Component {
         ? editEvent
         : evt;
     })
-    this.setState({events: newEvents, newEventId: null});
+    this.setState({ events: newEvents, newEventId: null });
   }
 
+  handleCheckChange = (name) => {
+    const types = [...this.state.checkedTypes];
+    const hasType = types.indexOf(name) !== -1;
+    let newTypes;
+    if(hasType) {
+      newTypes = types.filter(type => type !== name)
+    } else {
+      newTypes = [ ...types, name];
+    }
+    this.setState({checkedTypes: newTypes});
+  }
 
+  getEvents = () => this.state.events.filter( evt => this.state.checkedTypes.includes(evt.type));
 
   render() {
-    console.log('this.state.selectedEvent', this.state.selectedEvent)
     return (
-      <MuiPickersUtilsProvider utils={MomentUtils}>
-        <Calendar
-          selectable
-          resizable
-          className={this.props.className}
-          localizer={localizer}
-          events={this.state.events}
-          onEventResize={this.resizeEvent}
-          onSelectSlot={this.newEvent}
-          onSelectEvent={this.handleEventClick}
-          onEventDrop={this.moveEvent}
-          onDragStart={console.log}
-          popup
-          startAccessor="start"
-          endAccessor="end"
-          titleAccessor={(event) => event.title || '(No Title)'}
-          components={{event: Event}}
+      <Container>
+        <Side 
+          onCreate={this.newEvent}
+          checkedTypes={this.state.checkedTypes}
+          onCheckChange={this.handleCheckChange}
         />
-        <EventPopOver
-          anchorEl={this.state.selectedEventEl}
-          onClose={this.handleClosePopOver}
-          event={this.state.selectedEvent}
-          onSave={this.handlePopOverSave}
-          onDelete={this.handleDelete}
-        />
-      </MuiPickersUtilsProvider>
+        <Box className="main">
+          <MuiPickersUtilsProvider utils={MomentUtils}>
+            <TimeZonedCalendar
+              selectable
+              resizable
+              views={['month', 'day', 'week']}
+              className={this.props.className}
+              events={this.getEvents()}
+              onEventResize={this.resizeEvent}
+              onSelectSlot={this.newEvent}
+              onSelectEvent={this.handleEventClick}
+              onEventDrop={this.moveEvent}
+              onDragStart={console.log}
+              popup
+              startAccessor="start"
+              endAccessor="end"
+              titleAccessor={(event) => event.title || '(No Title)'}
+              components={{ event: Event }}
+            />
+            <EventPopOver
+              anchorEl={this.state.selectedEventEl}
+              onClose={this.handleClosePopOver}
+              event={this.state.selectedEvent}
+              onSave={this.handlePopOverSave}
+              onDelete={this.handleDelete}
+            />
+          </MuiPickersUtilsProvider>
+        </Box>
+      </Container>
     );
   }
 }

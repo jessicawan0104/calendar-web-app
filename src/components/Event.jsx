@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import DialogActions from '@material-ui/core/DialogActions';
-
-import DialogTitle from '@material-ui/core/DialogTitle';
-import Button from '@material-ui/core/Button';
-import EventPopOverContainer from './EventPopOverContainer';
-import EventPopOverContent from './EventPopOverContent';
 
 const styles = theme => ({
   popOver: {
@@ -16,7 +10,7 @@ const styles = theme => ({
   }
 });
 
-const Event = ({event, classes}) => {
+const Event = ({event}) => {
 
   return (
     <>

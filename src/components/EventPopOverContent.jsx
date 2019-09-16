@@ -1,20 +1,48 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardDateTimePicker
 } from '@material-ui/pickers';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
 
-const EventPopOverContent = ({ 
+const EventPopOverContent = ({
   start,
   end,
   onStartChange,
   onEndChange,
   desc,
-  onDescChange
+  onDescChange,
+  title,
+  onTitleChange,
+  type,
+  onTypeChange
 }) => {
   return (
     <>
+      <Box display="flex" spacing={2}>
+        <Box mr={2}>
+        <TextField
+          label="Title"
+          value={title}
+          margin="normal"
+          onChange={onTitleChange}
+        />
+        </Box>
+
+        <FormControl margin="normal">
+          <InputLabel>Type</InputLabel>
+          <Select name="Type" label="Type" value={type || 'NONE'} onChange={onTypeChange}>
+            <MenuItem value={'NONE'}>None</MenuItem>
+            <MenuItem value={'TODO'}>TODO</MenuItem>
+            <MenuItem value={'EVENT'}>Event</MenuItem>
+            <MenuItem value={'REMINDER'}>Reminder</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <Box display="flex">
         <Box mr={1}>
           <KeyboardDateTimePicker
