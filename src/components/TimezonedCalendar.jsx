@@ -3,7 +3,7 @@ import Calendar from "react-big-calendar";
 import moment from 'moment-timezone'
 
 export const convertDateTimeToDate = (datetime, timeZoneName) => {
-  const m = moment.tz(datetime, timeZoneName);
+  const m = moment.tz(datetime, Calendar.tz);
   return new Date(m.year(), m.month(), m.date(), m.hour(), m.minute(), 0)
 };
 

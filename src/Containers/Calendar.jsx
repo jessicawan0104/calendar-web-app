@@ -15,12 +15,7 @@ import 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 import 'react-big-calendar/lib/sass/styles.scss'
 import { Box } from '@material-ui/core';
 
-
-
-
 const DndCalendar = withDragAndDrop(TimeZonedCalendar)
-
-
 
 class MyCalendar extends React.Component {
   constructor(props) {
@@ -30,7 +25,8 @@ class MyCalendar extends React.Component {
       selectedEvent: {},
       selectedEventEl: null,
       newEventId: null,
-      checkedTypes: ['NONE', 'TODO', 'EVENT', 'REMINDER']
+      checkedTypes: ['NONE', 'TODO', 'EVENT', 'REMINDER'],
+      view: 'month',
     };
   }
 
@@ -45,9 +41,7 @@ class MyCalendar extends React.Component {
     } else if (event.allDay && !droppedOnAllDaySlot) {
       allDay = false
     }
-    // const diff = moment(event.end).diff(event.start, 'milliseconds');
-    // console.log('dfiff', diff)
-    // const newEnd = moment(start).add(diff, 'milliseconds').toISOString();
+
     const newEnd = end
 
     const updatedEvent = { ...event, start, end: newEnd, allDay }
@@ -89,10 +83,9 @@ class MyCalendar extends React.Component {
 
 
   newEvent = (event) => {
-    console.log('event.start', event.start)
-    console.log('event.end', event.end)
+
     let idList = this.state.events.map(a => a.id)
-    let newId = Math.max(...idList) + 1
+    let newId = idList.length === 0 ? 1 : Math.max(...idList) + 1;
     let newEvent = {
       id: newId,
       title: '',
@@ -100,6 +93,9 @@ class MyCalendar extends React.Component {
       start: event.start,
       end: event.end,
       type: 'NONE'
+    }
+    if(this.state.view === 'month' && event.slots.length !== 1) {
+      newEvent.end.minute(newEvent.end.minute() + 1);
     }
     this.setState({
       newEventId: newId,
@@ -174,6 +170,8 @@ class MyCalendar extends React.Component {
             <TimeZonedCalendar
               selectable
               resizable
+              view={this.state.view}
+              onView={(view) => this.setState({view})}
               views={['month', 'day', 'week']}
               className={this.props.className}
               events={this.getEvents()}
@@ -181,7 +179,6 @@ class MyCalendar extends React.Component {
               onSelectSlot={this.newEvent}
               onSelectEvent={this.handleEventClick}
               onEventDrop={this.moveEvent}
-              onDragStart={console.log}
               popup
               startAccessor="start"
               endAccessor="end"

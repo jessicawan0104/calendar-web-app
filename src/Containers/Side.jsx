@@ -4,6 +4,7 @@ import { Box, Typography, Button, FormControlLabel } from '@material-ui/core';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormGroup from '@material-ui/core/FormGroup';
+import moment from 'moment';
 
 
 const useStyles = makeStyles(theme => ({
@@ -21,7 +22,7 @@ const Side = ({
   onCheckChange
 }) => {
   const classes = useStyles();
-  const now = new Date();
+  const now = moment();
   const handleCreate = () => {
     const newEvent = {
       title: 'NewEvent',

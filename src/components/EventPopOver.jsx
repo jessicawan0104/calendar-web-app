@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Button from '@material-ui/core/Button';
 import EventPopOverContainer from './EventPopOverContainer';
 import EventPopOverContent from './EventPopOverContent';
-import TextField from '@material-ui/core/TextField';
 import Box from '@material-ui/core/Box';
 import { isEqual } from 'lodash';
-import Select from '@material-ui/core/Select';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 const EventPopOver = ({
@@ -78,7 +76,7 @@ const EventPopOver = ({
           start={editEvent.start}
           end={editEvent.end}
           desc={editEvent.desc}
-          title={editEvent.title}
+          title={editEvent.title || ''}
           type={editEvent.type}
           onStartChange={handleDateChange('start')}
           onEndChange={handleDateChange('end')}

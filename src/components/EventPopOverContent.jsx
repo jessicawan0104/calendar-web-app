@@ -25,13 +25,14 @@ const EventPopOverContent = ({
     <>
       <Box display="flex" spacing={2}>
         <Box mr={2}>
-        <TextField
-          label="Title"
-          value={title}
-          margin="normal"
-          onChange={onTitleChange}
-          placeholder="Add title"
-        />
+          <TextField
+            label="Title"
+            value={title}
+            margin="normal"
+            onChange={onTitleChange}
+            placeholder="Add title"
+            autoFocus
+          />
         </Box>
 
         <FormControl margin="normal">
