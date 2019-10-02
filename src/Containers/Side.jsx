@@ -1,11 +1,12 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import { Box, Typography, Button, FormControlLabel } from '@material-ui/core';
+import { makeStyles, MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { Box, Button, FormControlLabel } from '@material-ui/core';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormGroup from '@material-ui/core/FormGroup';
+// import {blue, deepPurple} from '@material-ui/core/colors'
 import moment from 'moment';
-
+// const blueTheme = createMuiTheme({ palette: { primary: deepPurple } })
 
 const useStyles = makeStyles(theme => ({
   leftIcon: {
@@ -38,24 +39,28 @@ const Side = ({
   }
   return (
     <Box pl={3} className="side">
-      <Typography variant="h4" gutterBottom> Calendar App</Typography>
-      <Button
-        color="primary"
-        size="large"
-        variant="contained"
-        className={classes.button}
-        onClick={handleCreate}
-      >
-        <AddCircleIcon className={classes.leftIcon} />
-        Create
-      </Button>
+      {/* <MuiThemeProvider theme={blueTheme}> */}
+        <Button
+          color="primary"
+          size="large"
+          variant="contained"
+          className={classes.button}
+          onClick={handleCreate}
+        >
+          <AddCircleIcon className={classes.leftIcon} />
+          Create
+        </Button>
+      {/* </MuiThemeProvider> */}
+
       <Box display="flex" justifyContent="center">
       <FormGroup>
         <FormControlLabel
-          control={<Checkbox 
-            checked={checkedTypes.includes('TODO')}
-            onChange={handleChange('TODO')}
-          />}
+          control={
+            <Checkbox 
+              checked={checkedTypes.includes('TODO')}
+              onChange={handleChange('TODO')}
+            />
+          }
           label="TODO"
         />
         <FormControlLabel

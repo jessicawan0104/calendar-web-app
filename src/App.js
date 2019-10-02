@@ -2,6 +2,8 @@ import React from 'react';
 import './App.css';
 import styled from 'styled-components';
 import Calendar from './Containers/Calendar';
+import Header from './components/Header';
+import WithAuth from './Containers/WithAuth';
 
 export const Container = styled.div`
 padding-right: 60px;
@@ -19,17 +21,14 @@ display: flex;
 `;
 
 
+
+
 function App() {
   return (
-    // <Container>
-    //   <div className="side">
-
-    //   </div>
-    //   <div className="main">
-    //     <Calendar/>
-    //   </div>
-    // </Container>
-    <Calendar/>
+    <WithAuth>
+      <Header/>
+      <Calendar/>
+    </WithAuth>
   );
 }
 

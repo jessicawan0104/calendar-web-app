@@ -14,23 +14,25 @@ const styles = theme => ({
 const EventPopOverContainer = ({anchorEl, handleClose, classes, children}) => {
   return (
     <Popover
-    id="simple-popper"
-    open={Boolean(anchorEl)}
-    anchorEl={anchorEl}
-    onClose={handleClose}
-    anchorOrigin={{
-      vertical: 'bottom',
-      horizontal: 'right',
-    }}
-    transformOrigin={{
-      vertical: 'top',
-      horizontal: 'left',
-    }}
-    className={classes.popOver}
-    classes={{
-      paper: classes.paper,
-    }}
-  >{children}</Popover>
+      id="simple-popper"
+      open={Boolean(anchorEl)}
+      anchorEl={anchorEl}
+      onClose={handleClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'right',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+      }}
+      className={classes.popOver}
+      classes={{
+        paper: classes.paper,
+      }}
+    >
+      {children}
+    </Popover>
   )
 };
 
