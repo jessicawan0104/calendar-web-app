@@ -3,19 +3,21 @@ import Calendar from "react-big-calendar";
 import moment from 'moment-timezone'
 
 export const convertDateTimeToDate = (datetime, timeZoneName) => {
-  const m = moment.tz(datetime, Calendar.tz);
+  const dt = datetime.seconds && !moment.isMoment(datetime) ? datetime.seconds * 1000 : datetime
+  const m = moment.tz(dt, Calendar.tz);
   return new Date(m.year(), m.month(), m.date(), m.hour(), m.minute(), 0)
 };
 
 export const convertDateToDateTime = (date, timeZoneName) => {
   const dateM = moment.tz(date, Calendar.tz);
-  return moment.tz({
+  const res = moment.tz({
     year: dateM.year(),
     month: dateM.month(),
     date: dateM.date(),
     hour: dateM.hour(),
     minute: dateM.minute(),
-  }, Calendar.tz);
+  }, Calendar.tz).toISOString();
+  return res;
 };
 
 Calendar.tz = moment.tz.guess();
@@ -41,13 +43,13 @@ const TimeZoneAgnosticBigCalendar = ({ events, onSelectSlot, onEventDrop, timeZo
           slots: slots.map(date => convertDateToDateTime(date, timeZoneName)),
         })
       }),
-      onEventDrop: onEventDrop && (({ event, start, end }) => {
-        onEventDrop({
-          event,
-          start: convertDateToDateTime(start, timeZoneName),
-          end: convertDateToDateTime(end, timeZoneName),
-        })
-      }),
+      // onEventDrop: onEventDrop && (({ event, start, end }) => {
+      //   onEventDrop({
+      //     event,
+      //     start: convertDateToDateTime(start, timeZoneName),
+      //     end: convertDateToDateTime(end, timeZoneName),
+      //   })
+      // }),
   }
   return <Calendar {...bigCalendarProps} />
 };

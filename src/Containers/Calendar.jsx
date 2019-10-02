@@ -7,9 +7,12 @@ import MomentUtils from '@date-io/moment';
 import EventPopOver from '../components/EventPopOver';
 import Event from '../components/Event';
 import TimeZonedCalendar from '../components/TimezonedCalendar'
+import Calendar from "react-big-calendar";
+import moment from 'moment-timezone'
 
 import { Container } from '../App';
 import Side from './Side';
+import * as firebase from 'firebase';
 
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 import 'react-big-calendar/lib/sass/styles.scss'
@@ -17,11 +20,31 @@ import { Box } from '@material-ui/core';
 
 const DndCalendar = withDragAndDrop(TimeZonedCalendar)
 
+const convertISOStringTOMoment = (events) => {
+  return events.map(event => {
+    return {
+      ...event,
+      start: moment(event.start),
+      end: moment(event.end)
+    }
+  })
+}
+const convertMomentTOIsoString = (events) => {
+  return events.map(event => {
+    return {
+      ...event,
+      start: moment.isMoment(event.start) || moment.isDate(event.start) ? event.start.toISOString() : event.start,
+      end: moment.isMoment(event.end) || moment.isDate(event.end) ? event.end.toISOString() : event.end,
+    }
+  })
+}
+
 class MyCalendar extends React.Component {
+  unsubscribe = null;
   constructor(props) {
     super(props);
     this.state = {
-      events: events,
+      events: [],
       selectedEvent: {},
       selectedEventEl: null,
       newEventId: null,
@@ -30,60 +53,99 @@ class MyCalendar extends React.Component {
     };
   }
 
-  moveEvent = ({ event, start, end, isAllDay: droppedOnAllDaySlot }) => {
-    const { events } = this.state
-
-    const idx = events.indexOf(event)
-    let allDay = event.allDay
-
-    if (!event.allDay && droppedOnAllDaySlot) {
-      allDay = true
-    } else if (event.allDay && !droppedOnAllDaySlot) {
-      allDay = false
-    }
-
-    const newEnd = end
-
-    const updatedEvent = { ...event, start, end: newEnd, allDay }
-    const nextEvents = [...events]
-    nextEvents.splice(idx, 1, updatedEvent)
-
-    this.setState({
-      events: nextEvents,
-    })
+  getUserInfo = () => {
+    return firebase.auth().currentUser;
   }
 
-  resizeEvent = ({ event, start, end }) => {
-    const { events } = this.state
-
-    const nextEvents = events.map(existingEvent => {
-      return existingEvent.id === event.id
-        ? { ...existingEvent, start, end }
-        : existingEvent
-    })
-
-    this.setState({
-      events: nextEvents,
-    })
-
+  getDocRef = () => {
+    const { uid } = this.getUserInfo();
+    return firebase.firestore().collection('events').doc(uid);
   }
 
-  onDragStart = ({ event, start, end }) => {
-    console.log('on drag start', event, start, end)
+  componentDidMount() {
+    const { displayName } = this.getUserInfo();
+    const docRef = this.getDocRef()
+    this.unsubscribe = docRef
+    .onSnapshot((doc) => {
+      if(doc.exists) {
+        this.setState({events: convertISOStringTOMoment(doc.data().events)})
+      } else {
+        this.setState({events: []})
+      }
+    });
+
+    docRef.get().then((doc) => {
+      if(doc.exists) {
+        this.setState({events: doc.data().events})
+      } else {
+        docRef.set({
+          name: displayName,
+          events: [],
+        });
+      }
+    })
   }
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
+
+  // moveEvent = ({ event, start, end, isAllDay: droppedOnAllDaySlot }) => {
+  //   const { events } = this.state
+
+  //   const idx = events.indexOf(event)
+  //   let allDay = event.allDay
+
+  //   if (!event.allDay && droppedOnAllDaySlot) {
+  //     allDay = true
+  //   } else if (event.allDay && !droppedOnAllDaySlot) {
+  //     allDay = false
+  //   }
+
+  //   const newEnd = end
+
+  //   const updatedEvent = { ...event, start, end: newEnd, allDay }
+  //   const nextEvents = [...events]
+  //   nextEvents.splice(idx, 1, updatedEvent)
+
+  //   this.setState({
+  //     events: nextEvents,
+  //   })
+  // }
+
+  // resizeEvent = ({ event, start, end }) => {
+  //   const { events } = this.state
+
+  //   const nextEvents = events.map(existingEvent => {
+  //     return existingEvent.id === event.id
+  //       ? { ...existingEvent, start, end }
+  //       : existingEvent
+  //   })
+
+  //   this.setState({
+  //     events: nextEvents,
+  //   })
+
+  // }
+
+  // onDragStart = ({ event, start, end }) => {
+  //   console.log('on drag start', event, start, end)
+  // }
 
   handleDelete = (event) => {
+    const docRef = this.getDocRef();
     const events = this.state.events.filter(evt => evt.id !== event.id)
-    this.setState({
-      events,
-      selectedEvent: {},
-      selectedEventEl: null,
-    });
+    docRef.update({
+      events: convertMomentTOIsoString(events)
+    }).then(() => {
+      this.setState({
+        selectedEvent: {},
+        selectedEventEl: null,
+      });
+    })
   }
 
 
   newEvent = (event) => {
-
     let idList = this.state.events.map(a => a.id)
     let newId = idList.length === 0 ? 1 : Math.max(...idList) + 1;
     let newEvent = {
@@ -95,11 +157,12 @@ class MyCalendar extends React.Component {
       type: 'NONE'
     }
     if(this.state.view === 'month' && event.slots.length !== 1) {
-      newEvent.end.minute(newEvent.end.minute() + 1);
+      newEvent.end = moment(newEvent.end).minute(moment(newEvent.end).minute() + 1).toISOString();
     }
+    
     this.setState({
       newEventId: newId,
-      events: this.state.events.concat([newEvent]),
+      events: convertISOStringTOMoment(this.state.events.concat([newEvent])),
     }, () => {
       const node = document.getElementById(`event-${newId}`);
       this.setState({
@@ -123,14 +186,24 @@ class MyCalendar extends React.Component {
       let newEvents;
       if (this.state.newEventId !== null) {
         newEvents = this.state.events.filter(evt => evt.id !== this.state.newEventId);
+        this.setState({
+          events: newEvents,
+          newEventId: null,
+          selectedEvent: {},
+        })
       } else {
         newEvents = this.state.events;
+        const docRef = this.getDocRef();
+        docRef.update({
+          events: convertMomentTOIsoString(newEvents),
+        }).then(() => {
+          this.setState({
+            newEventId: null,
+            selectedEvent: {},
+          })
+        })
       }
-      this.setState({
-        newEventId: null,
-        events: newEvents,
-        selectedEvent: {},
-      })
+
     })
   }
 

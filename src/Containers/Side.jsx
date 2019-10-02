@@ -23,7 +23,7 @@ const Side = ({
   onCheckChange
 }) => {
   const classes = useStyles();
-  const now = moment();
+  const now = moment().toISOString();
   const handleCreate = () => {
     const newEvent = {
       title: 'NewEvent',
