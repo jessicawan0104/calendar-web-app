@@ -40,7 +40,8 @@ export const convertMomentTOIsoString = (events) => {
 }
 
 class MyCalendar extends React.Component {
-  unsubscribe = null;
+  unsubscribeEvents = null;
+  unsubscribeUsers = null;
   constructor(props) {
     super(props);
     this.state = {
@@ -65,7 +66,7 @@ class MyCalendar extends React.Component {
 
   getUserList = () => {
     const { uid, email, displayName } = this.getUserInfo();
-    const userRef = firebase.firestore().collection('users').doc(uid)
+    const userRef = firebase.firestore().collection('users').doc(uid);
     userRef.get().then(doc => {
       if(!doc.exists) {
         userRef.set({
@@ -74,14 +75,21 @@ class MyCalendar extends React.Component {
         });
       }
     }).then(() => {
+
       const selfId = this.getUserInfo().uid;
-      firebase.firestore().collection('users').get().then(snapShot => {
+      const setUser = (snapShot) => {
         const users = snapShot.docs.map(doc => ({
           id: doc.id, 
           name: doc.data().name,
           email: doc.data().email,
         })).filter(user => user.id !== selfId);
         this.setState({users});
+      }
+      this.unsubscribeUsers = firebase.firestore().collection('users').onSnapshot(snapShot => {
+        setUser(snapShot)
+      });
+      firebase.firestore().collection('users').get().then(snapShot => {
+        setUser(snapShot)
       });
     })
   }
@@ -90,7 +98,7 @@ class MyCalendar extends React.Component {
     const { displayName } = this.getUserInfo();
     const docRef = this.getDocRef()
     this.getUserList();
-    this.unsubscribe = docRef
+    this.unsubscribeEvents = docRef
     .onSnapshot((doc) => {
       if(doc.exists) {
         this.setState({events: convertISOStringTOMoment(doc.data().events)})
@@ -112,7 +120,8 @@ class MyCalendar extends React.Component {
   }
 
   componentWillUnmount() {
-    this.unsubscribe();
+    this.unsubscribeUsers();
+    this.unsubscribeEvents();
   }
 
   // moveEvent = ({ event, start, end, isAllDay: droppedOnAllDaySlot }) => {
