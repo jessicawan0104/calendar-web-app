@@ -12,7 +12,7 @@ const Weather = ({address}) => {
     geocodeByAddress(address)
     .then(res => getLatLng(res[0]))
     .then(({lat, lng}) => {
-      return fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&APPID=fd796c09b8355868891c804f8da4fec5`)
+      return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&APPID=fd796c09b8355868891c804f8da4fec5`)
 
     })
     .then((res) => res.json())
@@ -48,7 +48,7 @@ const Weather = ({address}) => {
             Temperature: {(weather.main.temp - 273.15).toFixed(1)}
           </span>
         </div>
-        <img alt={weather.main.main} src={`http://openweathermap.org/img/w/${weather.weather[0].icon}.png`}/>
+        <img alt={weather.main.main} src={`https://openweathermap.org/img/w/${weather.weather[0].icon}.png`}/>
       </Box>
     )
     : (address ? <span>Loading weather</span> : <div></div>))
