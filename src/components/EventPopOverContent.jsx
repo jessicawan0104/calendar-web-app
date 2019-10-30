@@ -10,6 +10,8 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import ShareIcon from '@material-ui/icons/Share';
 import IconButton from '@material-ui/core/IconButton';
+import LocationInput from './LocationInput';
+import Weather from './Weather';
 
 const EventPopOverContent = ({
   start,
@@ -22,6 +24,8 @@ const EventPopOverContent = ({
   onTitleChange,
   type,
   onTypeChange,
+  address,
+  onAddressChange,
   onClickShare
 }) => {
   return (
@@ -82,7 +86,15 @@ const EventPopOverContent = ({
           />
         </Box>
       </Box>
-      <Box>
+      <Box mt={1} display="flex" alignItems="center">
+        <Box flexGrow={1}>
+          <LocationInput address={address || ''} onAddressChange={onAddressChange}/>
+        </Box>
+        <Box>
+          <Weather address={address}/>
+        </Box>
+      </Box>
+      <Box mt={1}>
         <TextField
           id="standard-textarea"
           label="Description"

@@ -12,6 +12,10 @@ import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import * as firebase from 'firebase';
 import { convertMomentTOIsoString } from '../Containers/Calendar';
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+
 const useStyles = makeStyles(theme => ({
   select: {
     margin: theme.spacing(1),
@@ -39,6 +43,7 @@ const EventPopOver = ({
   const [editEvent, setEditEvent] = useState(event);
   const [origEvent, setOrigEvent] = useState(event);
   const [selectedUser, setSelectedUser] = useState('');
+  const [open, setOpen] = React.useState(false);
   const classes = useStyles();
 
 
@@ -47,6 +52,13 @@ const EventPopOver = ({
     setOrigEvent(event);
     setView(VIEWS.MAIN);
   }, [event]);
+
+  const handleSnackClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
 
   const handleTitleChange = (e) => {
     const title = e.target.value;
@@ -82,6 +94,13 @@ const EventPopOver = ({
     });
   }
 
+  const handleAddressChange = (address) => {
+    setEditEvent({
+      ...editEvent,
+      address
+    });
+  }
+
   const isSaveDisabled = editEvent.end < editEvent.start;
 
   const handlePopOverClose = () => {
@@ -114,8 +133,10 @@ const EventPopOver = ({
       const newEvents = [...currEvents, ...convertMomentTOIsoString([event]) ]
       selectedUserRef.update({
         events: convertMomentTOIsoString(newEvents),
+      }).then(() => {
+        onClose();
+        setOpen(true);
       })
-      
     })
   }
 
@@ -127,12 +148,14 @@ const EventPopOver = ({
         desc={editEvent.desc}
         title={editEvent.title || ''}
         type={editEvent.type}
+        address={editEvent.address}
         onStartChange={handleDateChange('start')}
         onEndChange={handleDateChange('end')}
         onDescChange={handleDescChange}
         onTitleChange={handleTitleChange}
         onTypeChange={handleTypeChange}
         onClickShare={handleClickShare}
+        onAddressChange={handleAddressChange}
       />
 
       <MainViewButtonGroup
@@ -179,6 +202,7 @@ const EventPopOver = ({
 
 
   return (
+    <>
     <EventPopOverContainer anchorEl={anchorEl} handleClose={handlePopOverClose}>
       <Box p={3}>
         {view === VIEWS.MAIN
@@ -187,6 +211,32 @@ const EventPopOver = ({
         }
       </Box>
     </EventPopOverContainer>
+
+    <Snackbar
+    anchorOrigin={{
+      vertical: 'bottom',
+      horizontal: 'center',
+    }}
+    open={open}
+    autoHideDuration={3000}
+    onClose={handleSnackClose}
+    ContentProps={{
+      'aria-describedby': 'message-id',
+    }}
+    message={<span id="message-id">Event shared</span>}
+    action={[
+      <IconButton
+        key="close"
+        aria-label="close"
+        color="inherit"
+        className={classes.close}
+        onClick={handleSnackClose}
+      >
+        <CloseIcon />
+      </IconButton>,
+    ]}
+  />
+  </>
   )
 }
 
