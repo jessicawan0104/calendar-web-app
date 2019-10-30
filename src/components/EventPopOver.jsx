@@ -1,24 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import Button from '@material-ui/core/Button';
+import { makeStyles } from '@material-ui/core/styles';
 import EventPopOverContainer from './EventPopOverContainer';
 import EventPopOverContent from './EventPopOverContent';
+import { MainViewButtonGroup, ShareViewButtonGroup } from './EventPopOverButtonGroups';
 import Box from '@material-ui/core/Box';
+import Typography from '@material-ui/core/Typography';
 import { isEqual } from 'lodash';
-import DeleteIcon from '@material-ui/icons/Delete';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import * as firebase from 'firebase';
+import { convertMomentTOIsoString } from '../Containers/Calendar';
+const useStyles = makeStyles(theme => ({
+  select: {
+    margin: theme.spacing(1),
+    minWidth: 120,
+  },
+  selectEmpty: {
+    marginTop: theme.spacing(2),
+  },
+}));
+
+const VIEWS = {
+  MAIN: "MAIN",
+  SHARE: "SHARE"
+}
 
 const EventPopOver = ({
   anchorEl,
   onClose,
   event,
   onSave,
-  onDelete
+  onDelete,
+  users
 }) => {
+  const [view, setView] = useState(VIEWS.MAIN)
   const [editEvent, setEditEvent] = useState(event);
   const [origEvent, setOrigEvent] = useState(event);
+  const [selectedUser, setSelectedUser] = useState('');
+  const classes = useStyles();
+
 
   useEffect(() => {
     setEditEvent(event);
     setOrigEvent(event);
+    setView(VIEWS.MAIN);
   }, [event]);
 
   const handleTitleChange = (e) => {
@@ -67,46 +94,97 @@ const EventPopOver = ({
 
   const handleDelete = () => onDelete(event);
 
+  const handleSelectUser = (e) => {
+    setSelectedUser(e.target.value);
+  }
+
+  const handleClickShare = () => {
+    setView(VIEWS.SHARE)
+  }
+
+  const handleShareViewCancel = () => {
+    setView(VIEWS.MAIN)
+  }
+
+  const handleShare = () => {
+    const selectedUserRef = firebase.firestore().collection('events').doc(selectedUser);
+    selectedUserRef.get().then((doc) => {
+      if(!doc.exists) { return; }
+      const currEvents = doc.data().events;
+      const newEvents = [...currEvents, ...convertMomentTOIsoString([event]) ]
+      selectedUserRef.update({
+        events: convertMomentTOIsoString(newEvents),
+      })
+      
+    })
+  }
+
+  const renderMainView = () => (
+    <>
+      <EventPopOverContent
+        start={editEvent.start}
+        end={editEvent.end}
+        desc={editEvent.desc}
+        title={editEvent.title || ''}
+        type={editEvent.type}
+        onStartChange={handleDateChange('start')}
+        onEndChange={handleDateChange('end')}
+        onDescChange={handleDescChange}
+        onTitleChange={handleTitleChange}
+        onTypeChange={handleTypeChange}
+        onClickShare={handleClickShare}
+      />
+
+      <MainViewButtonGroup
+        onClose={onClose}
+        handleSave={handleSave}
+        isSaveDisabled={isSaveDisabled}
+        handleDelete={handleDelete}
+      />
+    </>
+  )
+
+
+  const renderShareView = () => (
+    <>
+      <Typography>Share the event to</Typography>
+      <Box mr={2}>
+        <FormControl margin="normal">
+          <InputLabel>Users</InputLabel>
+          <Select
+            className={classes.select}
+            name="users"
+            label="Users"
+            value={selectedUser}
+            onChange={handleSelectUser}
+          >
+            {users.map(user => (
+              <MenuItem
+                key={user.id}
+                value={user.id}
+              >
+                {`${user.name}(${user.email})`}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <ShareViewButtonGroup
+        onCancel={handleShareViewCancel}
+        onShare={handleShare}
+        isShareDisabled={!Boolean(selectedUser)}
+      />
+    </>
+  )
+
 
   return (
     <EventPopOverContainer anchorEl={anchorEl} handleClose={handlePopOverClose}>
       <Box p={3}>
-
-        <EventPopOverContent
-          start={editEvent.start}
-          end={editEvent.end}
-          desc={editEvent.desc}
-          title={editEvent.title || ''}
-          type={editEvent.type}
-          onStartChange={handleDateChange('start')}
-          onEndChange={handleDateChange('end')}
-          onDescChange={handleDescChange}
-          onTitleChange={handleTitleChange}
-          onTypeChange={handleTypeChange}
-        />
-
-        <Box pt={3} display="flex" flexDirection="row-reverse" justifyContent="space-between">
-          <div>
-            <Button onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              color="primary"
-              disabled={isSaveDisabled}
-            >
-              Save
-            </Button>
-          </div>
-          <div>
-            <Button onClick={handleDelete} color="secondary">
-              <DeleteIcon/>
-              Delete
-            </Button>
-          </div>
-        </Box>
-
+        {view === VIEWS.MAIN
+          ? renderMainView()
+          : renderShareView()
+        }
       </Box>
     </EventPopOverContainer>
   )

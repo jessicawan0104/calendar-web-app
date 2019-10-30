@@ -8,6 +8,8 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
+import ShareIcon from '@material-ui/icons/Share';
+import IconButton from '@material-ui/core/IconButton';
 
 const EventPopOverContent = ({
   start,
@@ -19,31 +21,39 @@ const EventPopOverContent = ({
   title,
   onTitleChange,
   type,
-  onTypeChange
+  onTypeChange,
+  onClickShare
 }) => {
   return (
     <>
       <Box display="flex" spacing={2}>
-        <Box mr={2}>
-          <TextField
-            label="Title"
-            value={title}
-            margin="normal"
-            onChange={onTitleChange}
-            placeholder="Add title"
-            autoFocus
-          />
-        </Box>
+        <Box display="flex" flexGrow={1}>
+          <Box mr={2}>
+            <TextField
+              label="Title"
+              value={title}
+              margin="normal"
+              onChange={onTitleChange}
+              placeholder="Add title"
+              autoFocus
+            />
+          </Box>
 
-        <FormControl margin="normal">
-          <InputLabel>Type</InputLabel>
-          <Select name="Type" label="Type" value={type || 'NONE'} onChange={onTypeChange}>
-            <MenuItem value={'NONE'}>None</MenuItem>
-            <MenuItem value={'TODO'}>TODO</MenuItem>
-            <MenuItem value={'EVENT'}>Event</MenuItem>
-            <MenuItem value={'REMINDER'}>Reminder</MenuItem>
-          </Select>
-        </FormControl>
+          <FormControl margin="normal">
+            <InputLabel>Type</InputLabel>
+            <Select name="Type" label="Type" value={type || 'NONE'} onChange={onTypeChange}>
+              <MenuItem value={'NONE'}>None</MenuItem>
+              <MenuItem value={'TODO'}>TODO</MenuItem>
+              <MenuItem value={'EVENT'}>Event</MenuItem>
+              <MenuItem value={'REMINDER'}>Reminder</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        <Box justifySelf="flex-end">
+          <IconButton  onClick={onClickShare}>
+            <ShareIcon/>
+          </IconButton>
+        </Box>
       </Box>
       <Box display="flex">
         <Box mr={1}>

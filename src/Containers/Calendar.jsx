@@ -20,7 +20,7 @@ import { Box } from '@material-ui/core';
 
 const DndCalendar = withDragAndDrop(TimeZonedCalendar)
 
-const convertISOStringTOMoment = (events) => {
+export const convertISOStringTOMoment = (events) => {
   return events.map(event => {
     return {
       ...event,
@@ -29,7 +29,7 @@ const convertISOStringTOMoment = (events) => {
     }
   })
 }
-const convertMomentTOIsoString = (events) => {
+export const convertMomentTOIsoString = (events) => {
   return events.map(event => {
     return {
       ...event,
@@ -45,6 +45,7 @@ class MyCalendar extends React.Component {
     super(props);
     this.state = {
       events: [],
+      users: [],
       selectedEvent: {},
       selectedEventEl: null,
       newEventId: null,
@@ -62,9 +63,33 @@ class MyCalendar extends React.Component {
     return firebase.firestore().collection('events').doc(uid);
   }
 
+  getUserList = () => {
+    const { uid, email, displayName } = this.getUserInfo();
+    const userRef = firebase.firestore().collection('users').doc(uid)
+    userRef.get().then(doc => {
+      if(!doc.exists) {
+        userRef.set({
+          email: email,
+          name: displayName
+        });
+      }
+    }).then(() => {
+      const selfId = this.getUserInfo().uid;
+      firebase.firestore().collection('users').get().then(snapShot => {
+        const users = snapShot.docs.map(doc => ({
+          id: doc.id, 
+          name: doc.data().name,
+          email: doc.data().email,
+        })).filter(user => user.id !== selfId);
+        this.setState({users});
+      });
+    })
+  }
+
   componentDidMount() {
     const { displayName } = this.getUserInfo();
     const docRef = this.getDocRef()
+    this.getUserList();
     this.unsubscribe = docRef
     .onSnapshot((doc) => {
       if(doc.exists) {
@@ -85,6 +110,7 @@ class MyCalendar extends React.Component {
       }
     })
   }
+
   componentWillUnmount() {
     this.unsubscribe();
   }
@@ -264,6 +290,7 @@ class MyCalendar extends React.Component {
               event={this.state.selectedEvent}
               onSave={this.handlePopOverSave}
               onDelete={this.handleDelete}
+              users={this.state.users}
             />
           </MuiPickersUtilsProvider>
         </Box>
