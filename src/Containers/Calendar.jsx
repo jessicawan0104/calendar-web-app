@@ -9,6 +9,7 @@ import Event from '../components/Event';
 import TimeZonedCalendar from '../components/TimezonedCalendar'
 import Calendar from "react-big-calendar";
 import moment from 'moment-timezone'
+import TodoList from '../components/TodoList';
 
 import { Container } from '../App';
 import Side from './Side';
@@ -52,6 +53,11 @@ class MyCalendar extends React.Component {
       newEventId: null,
       checkedTypes: ['NONE', 'TODO', 'EVENT', 'REMINDER'],
       view: 'month',
+      todoListModalOpen: true,
+      todos: [
+        {desc: 'todostodostodostodostodostodos', completed: false},
+        {desc: 'todos 2', completed: true}
+      ]
     };
   }
 
@@ -183,10 +189,11 @@ class MyCalendar extends React.Component {
   newEvent = (event) => {
     let idList = this.state.events.map(a => a.id)
     let newId = idList.length === 0 ? 1 : Math.max(...idList) + 1;
+    const isAllDay = event.slots.length === 1 && event.start !== event.end;
     let newEvent = {
       id: newId,
       title: '',
-      allDay: event.slots.length === 1,
+      allDay: isAllDay,
       start: event.start,
       end: event.end,
       type: 'NONE'
@@ -265,13 +272,57 @@ class MyCalendar extends React.Component {
 
   getEvents = () => this.state.events.filter( evt => this.state.checkedTypes.includes(evt.type));
 
+  closeModal = () => {
+    this.setState({todoListModalOpen: !this.state.todoListModalOpen})
+  }
+
+  openModal = () => {
+    this.setState({todoListModalOpen: true})
+  }
+
+  handleTodoCheckChange = (index) => {
+    const newTodos = this.state.todos.map((todo, idx) => {
+      return idx === index ? {...todo, completed: !todo.completed} : todo
+    });
+    this.setState({todos: newTodos})
+  }
+
+  handleInputChange = (value, index) => {
+    const newTodos = this.state.todos.map((todo, idx) => {
+      return idx === index ? {...todo, desc: value} : todo
+    });
+    this.setState({todos: newTodos})
+  }
+
+  handleTodoDelete = (index) => {
+    const newTodos = this.state.todos.filter((todo, idx) => idx !== index);
+    this.setState({todos: newTodos})
+  }
+
+  handleAddTodo = () => {
+    const newTodos = [...this.state.todos, {desc: '', completed: false}];
+    this.setState({todos: newTodos})
+  }
+
+
+
   render() {
     return (
       <Container>
-        <Side 
+        <Side
           onCreate={this.newEvent}
           checkedTypes={this.state.checkedTypes}
           onCheckChange={this.handleCheckChange}
+          onOpenTodoList={this.openModal}
+        />
+        <TodoList
+          todos={this.state.todos}
+          open={this.state.todoListModalOpen}
+          onCheckChange={this.handleTodoCheckChange}
+          onClose={this.closeModal}
+          onInputChange={this.handleInputChange}
+          onDelete={this.handleTodoDelete}
+          onAddTodo={this.handleAddTodo}
         />
         <Box className="main">
           <MuiPickersUtilsProvider utils={MomentUtils}>
@@ -280,7 +331,7 @@ class MyCalendar extends React.Component {
               resizable
               view={this.state.view}
               onView={(view) => this.setState({view})}
-              views={['month', 'day', 'week']}
+              views={['month', 'day', 'week', 'agenda']}
               className={this.props.className}
               events={this.getEvents()}
               onEventResize={this.resizeEvent}
