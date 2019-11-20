@@ -19,9 +19,16 @@ const TodoItem = ({
   id,
   value,
   onChange,
-  completed
+  onConfirm,
+  completed,
 }) => {
   const [isEditing, setIsEditing] = useState(value === '');
+  const handleConfirm = () => {
+    if (value !== '') {
+      setIsEditing(false);
+      onConfirm(value);
+    }
+  }
   return isEditing
     ? (
       <TextField
@@ -30,7 +37,7 @@ const TodoItem = ({
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              <CheckOutlinedIcon onClick={() => { value !== '' && setIsEditing(false) }} />
+              <CheckOutlinedIcon onClick={handleConfirm} />
             </InputAdornment>
           ),
         }}
@@ -117,6 +124,7 @@ const TodoList = (props) => {
                           <TodoItem
                             value={todo.desc}
                             onChange={(e) => handleInputChange(e, index)}
+                            onConfirm={props.onInputConfirm}
                             completed={todo.completed}
                           />
                           <ListItemIcon>

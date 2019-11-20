@@ -53,11 +53,8 @@ class MyCalendar extends React.Component {
       newEventId: null,
       checkedTypes: ['NONE', 'TODO', 'EVENT', 'REMINDER'],
       view: 'month',
-      todoListModalOpen: true,
-      todos: [
-        {desc: 'todostodostodostodostodostodos', completed: false},
-        {desc: 'todos 2', completed: true}
-      ]
+      todoListModalOpen: false,
+      todos: []
     };
   }
 
@@ -74,7 +71,7 @@ class MyCalendar extends React.Component {
     const { uid, email, displayName } = this.getUserInfo();
     const userRef = firebase.firestore().collection('users').doc(uid);
     userRef.get().then(doc => {
-      if(!doc.exists) {
+      if (!doc.exists) {
         userRef.set({
           email: email,
           name: displayName
@@ -85,11 +82,11 @@ class MyCalendar extends React.Component {
       const selfId = this.getUserInfo().uid;
       const setUser = (snapShot) => {
         const users = snapShot.docs.map(doc => ({
-          id: doc.id, 
+          id: doc.id,
           name: doc.data().name,
           email: doc.data().email,
         })).filter(user => user.id !== selfId);
-        this.setState({users});
+        this.setState({ users });
       }
       this.unsubscribeUsers = firebase.firestore().collection('users').onSnapshot(snapShot => {
         setUser(snapShot)
@@ -105,21 +102,31 @@ class MyCalendar extends React.Component {
     const docRef = this.getDocRef()
     this.getUserList();
     this.unsubscribeEvents = docRef
-    .onSnapshot((doc) => {
-      if(doc.exists) {
-        this.setState({events: convertISOStringTOMoment(doc.data().events)})
-      } else {
-        this.setState({events: []})
-      }
-    });
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          this.setState({
+            events: convertISOStringTOMoment(doc.data().events),
+            todos: doc.data().todos || []
+          })
+        } else {
+          this.setState({
+            events: [],
+            todos: []
+          })
+        }
+      });
 
     docRef.get().then((doc) => {
-      if(doc.exists) {
-        this.setState({events: doc.data().events})
+      if (doc.exists) {
+        this.setState({
+          events: doc.data().events,
+          todos: doc.data().todos || []
+        })
       } else {
         docRef.set({
           name: displayName,
           events: [],
+          todos: [],
         });
       }
     })
@@ -198,10 +205,10 @@ class MyCalendar extends React.Component {
       end: event.end,
       type: 'NONE'
     }
-    if(this.state.view === 'month' && event.slots.length !== 1) {
+    if (this.state.view === 'month' && event.slots.length !== 1) {
       newEvent.end = moment(newEvent.end).minute(moment(newEvent.end).minute() + 1).toISOString();
     }
-    
+
     this.setState({
       newEventId: newId,
       events: convertISOStringTOMoment(this.state.events.concat([newEvent])),
@@ -262,46 +269,68 @@ class MyCalendar extends React.Component {
     const types = [...this.state.checkedTypes];
     const hasType = types.indexOf(name) !== -1;
     let newTypes;
-    if(hasType) {
+    if (hasType) {
       newTypes = types.filter(type => type !== name)
     } else {
-      newTypes = [ ...types, name];
+      newTypes = [...types, name];
     }
-    this.setState({checkedTypes: newTypes});
+    this.setState({ checkedTypes: newTypes });
   }
 
-  getEvents = () => this.state.events.filter( evt => this.state.checkedTypes.includes(evt.type));
+  getEvents = () => this.state.events.filter(evt => this.state.checkedTypes.includes(evt.type));
 
   closeModal = () => {
-    this.setState({todoListModalOpen: !this.state.todoListModalOpen})
+    this.setState({ todoListModalOpen: !this.state.todoListModalOpen })
   }
 
   openModal = () => {
-    this.setState({todoListModalOpen: true})
+    this.setState({ todoListModalOpen: true })
   }
 
   handleTodoCheckChange = (index) => {
     const newTodos = this.state.todos.map((todo, idx) => {
-      return idx === index ? {...todo, completed: !todo.completed} : todo
+      return idx === index ? { ...todo, completed: !todo.completed } : todo
     });
-    this.setState({todos: newTodos})
+    const docRef = this.getDocRef();
+    docRef.update({
+      todos: newTodos,
+    }).then(() => {
+      this.setState({ todos: newTodos })
+    })
   }
 
   handleInputChange = (value, index) => {
     const newTodos = this.state.todos.map((todo, idx) => {
-      return idx === index ? {...todo, desc: value} : todo
+      return idx === index ? { ...todo, desc: value } : todo
     });
-    this.setState({todos: newTodos})
+    this.setState({ todos: newTodos })
+  }
+
+  handleInputConfirm = (value) => {
+    const docRef = this.getDocRef();
+    docRef.update({
+      todos: this.state.todos,
+    })
   }
 
   handleTodoDelete = (index) => {
     const newTodos = this.state.todos.filter((todo, idx) => idx !== index);
-    this.setState({todos: newTodos})
+    const docRef = this.getDocRef();
+    docRef.update({
+      todos: newTodos,
+    }).then(() => {
+      this.setState({ todos: newTodos })
+    })
   }
 
   handleAddTodo = () => {
-    const newTodos = [...this.state.todos, {desc: '', completed: false}];
-    this.setState({todos: newTodos})
+    const newTodos = [...this.state.todos, { desc: '', completed: false }];
+    const docRef = this.getDocRef();
+    docRef.update({
+      todos: newTodos,
+    }).then(() => {
+      this.setState({ todos: newTodos })
+    })
   }
 
 
@@ -321,6 +350,7 @@ class MyCalendar extends React.Component {
           onCheckChange={this.handleTodoCheckChange}
           onClose={this.closeModal}
           onInputChange={this.handleInputChange}
+          onInputConfirm={this.handleInputConfirm}
           onDelete={this.handleTodoDelete}
           onAddTodo={this.handleAddTodo}
         />
@@ -330,7 +360,7 @@ class MyCalendar extends React.Component {
               selectable
               resizable
               view={this.state.view}
-              onView={(view) => this.setState({view})}
+              onView={(view) => this.setState({ view })}
               views={['month', 'day', 'week', 'agenda']}
               className={this.props.className}
               events={this.getEvents()}
