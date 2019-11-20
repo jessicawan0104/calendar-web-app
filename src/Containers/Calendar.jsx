@@ -14,6 +14,7 @@ import TodoList from '../components/TodoList';
 import { Container } from '../App';
 import Side from './Side';
 import * as firebase from 'firebase';
+import _ from 'lodash';
 
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 import 'react-big-calendar/lib/sass/styles.scss'
@@ -333,6 +334,37 @@ class MyCalendar extends React.Component {
     })
   }
 
+  handleExport = async () => {
+    const { events, todos } = this.state;
+    const data = {
+      events,
+      todos
+    }
+    const fileName = "calendar";
+    const json = JSON.stringify(data, null, 4);
+    const blob = new Blob([json], { type: 'application/json' });
+    const href = await URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName + ".json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  handleImport = (data) => {
+    const {events, todos} = data;
+    if(events) {
+      const newEents = _.union(events, this.state.events);
+      this.setState({events: newEents});
+    }
+
+    if(todos) {
+      const newEents = _.union(todos, this.state.todos);
+      this.setState({todos: newEents});
+    }
+  }
+
 
 
   render() {
@@ -343,6 +375,8 @@ class MyCalendar extends React.Component {
           checkedTypes={this.state.checkedTypes}
           onCheckChange={this.handleCheckChange}
           onOpenTodoList={this.openModal}
+          onExport={this.handleExport}
+          onImport={this.handleImport}
         />
         <TodoList
           todos={this.state.todos}
