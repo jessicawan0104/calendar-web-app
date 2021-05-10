@@ -9,7 +9,7 @@
     "@material-ui/lab": "^4.0.0-alpha.30",
     "@material-ui/pickers": "^3.2.6",
     "firebase": "^7.0.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "material-ui-dropzone": "^2.4.6",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
